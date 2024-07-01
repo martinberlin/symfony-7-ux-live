@@ -1,0 +1,12 @@
+{% extends "/base.html.twig" %}
+
+{% block body %}
+    {{ component('RandomNumber', { max: 500 }) }}
+
+
+
+
+    <br><br><br><br>
+    <div data-controller="hello">Testing Stimulus</div>
+
+{% endblock %}
