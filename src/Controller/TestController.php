@@ -2,9 +2,11 @@
 // src/Controller/LuckyController.php
 namespace App\Controller;
 
+use App\Entity\TodoItem;
 use App\Entity\TodoList;
 use App\Form\Type\EmailType;
 use App\Form\Type\TodoListFormType;
+use App\Repository\TodoListRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -30,28 +32,32 @@ class TestController extends AbstractController
         ]);
     }
 
-    #[Route('/test/todo')]
-    public function todoList(): Response
+
+    #[Route('/test/todo', name: 'todolist', defaults: ['id' => null])]
+    public function todoList(Request $request, TodoListRepository $todoListRepository, ?TodoList $todoList = null): Response
     {
-        $myTodo = new TodoList();
-        $form = $this->createForm(TodoListFormType::class, $myTodo, [
-            'action' => $this->generateUrl('todoSave'),
-            'method' => 'POST'
-        ]);
+        if (!$todoList) {
+            $todoList = new TodoList();
+            $todoList->addTodoItem(new TodoItem());
+        }
+        $form = $this->createForm(TodoListFormType::class, $todoList);
+        $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            exit("Form is valid:SAVE");
+            
+            $todoListRepository->add($form->getData(), true);
+            $this->addFlash('live_demo_success', 'Excellent! With this to-do list, I won’t miss anything.');
+
+            return $this->redirectToRoute('todolist', [
+                'id' => $todoList->getId(),
+            ]);
+
         }
 
         return $this->render('test/todo.html.twig', [
-            'mytodoList' => $myTodo,
+            'mytodoList' => $todoList,
             'myForm' => $form
         ]);
     }
 
-    #[Route('/test/todo/save', 'todoSave')]
-    public function todoListSave(Request $request): Response
-    {
-        exit("todoListSave");
-    }
 }
